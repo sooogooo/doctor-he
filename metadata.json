@@ -1,0 +1,8 @@
+{
+  "name": "Dr-He-AI-Face-Analysis: 智能皮肤与面部分析",
+  "description": "通过一张照片获得个性化的美学和健康见解。这款由人工智能驱动的工具可以分析您的肤色、气色和面部特征，提供美容技巧和健康观察。本分析仅供参考，不构成医疗诊断。",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "prompt": ""
+}
