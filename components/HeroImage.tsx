@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const imageUrls = [
   'https://docs.bccsw.cn/images/chacha/faceonly.jpg',
@@ -9,7 +9,7 @@ const imageUrls = [
   'https://docs.bccsw.cn/images/chacha/xinfuyuan1.jpg',
   'https://docs.bccsw.cn/images/chacha/xinfuyuan2.jpg',
   'https://docs.bccsw.cn/images/chacha/xinfuyuan3.jpg',
-  'https://docs.bccsw.cn/images/chacha/xinfuyuan4.jpg'
+  'https://docs.bccsw.cn/images/chacha/xinfuyuan4.jpg',
 ];
 
 interface HeroImageProps {
@@ -27,10 +27,10 @@ const HeroImageComponent: React.FC<HeroImageProps> = ({ pageKey }) => {
     do {
       newImage = imageUrls[Math.floor(Math.random() * imageUrls.length)];
     } while (imageUrls.length > 1 && newImage === lastImageRef.current);
-    
+
     setCurrentImage(newImage);
     lastImageRef.current = newImage;
-    setAnimationKey(prev => prev + 1); // Reset animation on image change
+    setAnimationKey((prev) => prev + 1); // Reset animation on image change
   }, [pageKey]);
 
   return (

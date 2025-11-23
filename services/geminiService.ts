@@ -1,78 +1,141 @@
-
-import { GoogleGenAI, GenerateContentResponse, Chat, Type } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse, Chat, Type } from '@google/genai';
 import type { AnalysisReport, ChatMessage, SettingsData } from '../types';
 
 if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable not set");
+  throw new Error('API_KEY environment variable not set');
 }
-  
+
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 let chat: Chat | null = null;
 let currentChatSettings: SettingsData | null = null;
 
 const analysisCategorySchema = {
-    type: Type.OBJECT,
-    properties: {
-        findings: {
-            type: Type.ARRAY,
-            description: "Specific findings about the skin, e.g., spots, wrinkles. Includes coordinates if localized.",
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    description: { type: Type.STRING, description: "Description of the finding." },
-                    coordinates: {
-                        type: Type.OBJECT,
-                        description: "Optional normalized coordinates (x, y) of the finding.",
-                        properties: {
-                            x: { type: Type.NUMBER },
-                            y: { type: Type.NUMBER }
-                        },
-                        required: ['x', 'y']
-                    }
-                },
-                required: ['description']
-            }
+  type: Type.OBJECT,
+  properties: {
+    findings: {
+      type: Type.ARRAY,
+      description:
+        'Specific findings about the skin, e.g., spots, wrinkles. Includes coordinates if localized.',
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          description: { type: Type.STRING, description: 'Description of the finding.' },
+          coordinates: {
+            type: Type.OBJECT,
+            description: 'Optional normalized coordinates (x, y) of the finding.',
+            properties: {
+              x: { type: Type.NUMBER },
+              y: { type: Type.NUMBER },
+            },
+            required: ['x', 'y'],
+          },
         },
-        aesthetic_suggestions: { type: Type.ARRAY, items: { type: Type.STRING } },
-        medical_insights: { type: Type.ARRAY, items: { type: Type.STRING } },
-        recommendations: { type: Type.ARRAY, items: { type: Type.STRING } }
+        required: ['description'],
+      },
     },
-    required: ['findings', 'aesthetic_suggestions', 'medical_insights', 'recommendations']
+    aesthetic_suggestions: { type: Type.ARRAY, items: { type: Type.STRING } },
+    medical_insights: { type: Type.ARRAY, items: { type: Type.STRING } },
+    recommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
+  },
+  required: ['findings', 'aesthetic_suggestions', 'medical_insights', 'recommendations'],
 };
 
 const analysisSchema = {
-    type: Type.OBJECT,
-    properties: {
-        error: { type: Type.STRING, description: "Error message if analysis cannot be performed." },
-        '肤色': { ...analysisCategorySchema, description: "Analysis of skin tone and color." },
-        '气色': { ...analysisCategorySchema, description: "Analysis of complexion and vitality." },
-        '形色': {
-            type: Type.OBJECT,
-            description: "Deep aesthetic analysis of facial structure.",
-            properties: {
-                regions: {
-                    type: Type.OBJECT,
-                    description: "Analysis of 8 key facial regions.",
-                    properties: {
-                        上面部: { type: Type.OBJECT, properties: { 物象: { type: Type.STRING }, 意象: { type: Type.STRING }, 意境: { type: Type.STRING } }, required: ['物象', '意象', '意境'] },
-                        中面部: { type: Type.OBJECT, properties: { 物象: { type: Type.STRING }, 意象: { type: Type.STRING }, 意境: { type: Type.STRING } }, required: ['物象', '意象', '意境'] },
-                        下面部: { type: Type.OBJECT, properties: { 物象: { type: Type.STRING }, 意象: { type: Type.STRING }, 意境: { type: Type.STRING } }, required: ['物象', '意象', '意境'] },
-                        下颌线: { type: Type.OBJECT, properties: { 物象: { type: Type.STRING }, 意象: { type: Type.STRING }, 意境: { type: Type.STRING } }, required: ['物象', '意象', '意境'] },
-                        颈部: { type: Type.OBJECT, properties: { 物象: { type: Type.STRING }, 意象: { type: Type.STRING }, 意境: { type: Type.STRING } }, required: ['物象', '意象', '意境'] },
-                        眼部: { type: Type.OBJECT, properties: { 物象: { type: Type.STRING }, 意象: { type: Type.STRING }, 意境: { type: Type.STRING } }, required: ['物象', '意象', '意境'] },
-                        鼻部: { type: Type.OBJECT, properties: { 物象: { type: Type.STRING }, 意象: { type: Type.STRING }, 意境: { type: Type.STRING } }, required: ['物象', '意象', '意境'] },
-                        口唇部: { type: Type.OBJECT, properties: { 物象: { type: Type.STRING }, 意象: { type: Type.STRING }, 意境: { type: Type.STRING } }, required: ['物象', '意象', '意境'] },
-                    },
-                    required: ['上面部', '中面部', '下面部', '下颌线', '颈部', '眼部', '鼻部', '口唇部']
-                },
-                gestalt_summary: { type: Type.STRING }
+  type: Type.OBJECT,
+  properties: {
+    error: { type: Type.STRING, description: 'Error message if analysis cannot be performed.' },
+    肤色: { ...analysisCategorySchema, description: 'Analysis of skin tone and color.' },
+    气色: { ...analysisCategorySchema, description: 'Analysis of complexion and vitality.' },
+    形色: {
+      type: Type.OBJECT,
+      description: 'Deep aesthetic analysis of facial structure.',
+      properties: {
+        regions: {
+          type: Type.OBJECT,
+          description: 'Analysis of 8 key facial regions.',
+          properties: {
+            上面部: {
+              type: Type.OBJECT,
+              properties: {
+                物象: { type: Type.STRING },
+                意象: { type: Type.STRING },
+                意境: { type: Type.STRING },
+              },
+              required: ['物象', '意象', '意境'],
             },
-            required: ['regions', 'gestalt_summary']
-        }
-    }
+            中面部: {
+              type: Type.OBJECT,
+              properties: {
+                物象: { type: Type.STRING },
+                意象: { type: Type.STRING },
+                意境: { type: Type.STRING },
+              },
+              required: ['物象', '意象', '意境'],
+            },
+            下面部: {
+              type: Type.OBJECT,
+              properties: {
+                物象: { type: Type.STRING },
+                意象: { type: Type.STRING },
+                意境: { type: Type.STRING },
+              },
+              required: ['物象', '意象', '意境'],
+            },
+            下颌线: {
+              type: Type.OBJECT,
+              properties: {
+                物象: { type: Type.STRING },
+                意象: { type: Type.STRING },
+                意境: { type: Type.STRING },
+              },
+              required: ['物象', '意象', '意境'],
+            },
+            颈部: {
+              type: Type.OBJECT,
+              properties: {
+                物象: { type: Type.STRING },
+                意象: { type: Type.STRING },
+                意境: { type: Type.STRING },
+              },
+              required: ['物象', '意象', '意境'],
+            },
+            眼部: {
+              type: Type.OBJECT,
+              properties: {
+                物象: { type: Type.STRING },
+                意象: { type: Type.STRING },
+                意境: { type: Type.STRING },
+              },
+              required: ['物象', '意象', '意境'],
+            },
+            鼻部: {
+              type: Type.OBJECT,
+              properties: {
+                物象: { type: Type.STRING },
+                意象: { type: Type.STRING },
+                意境: { type: Type.STRING },
+              },
+              required: ['物象', '意象', '意境'],
+            },
+            口唇部: {
+              type: Type.OBJECT,
+              properties: {
+                物象: { type: Type.STRING },
+                意象: { type: Type.STRING },
+                意境: { type: Type.STRING },
+              },
+              required: ['物象', '意象', '意境'],
+            },
+          },
+          required: ['上面部', '中面部', '下面部', '下颌线', '颈部', '眼部', '鼻部', '口唇部'],
+        },
+        gestalt_summary: { type: Type.STRING },
+      },
+      required: ['regions', 'gestalt_summary'],
+    },
+  },
 };
-
 
 const getAnalysisPrompt = () => {
   return `You are a world-class AI expert in health, beauty technology, and classical aesthetics. Your task is to analyze a facial image based on three concepts: "肤色" (Skin Tone & Color), "气色" (Complexion & Vitality), and a highly detailed "形色" (Facial Form & Aesthetics).
@@ -99,50 +162,51 @@ const getAnalysisPrompt = () => {
   4.  **Language:** ALL responses MUST be in Simplified Chinese.`;
 };
 
+export const analyzeImage = async (
+  base64ImageData: string,
+  mimeType: string
+): Promise<AnalysisReport> => {
+  const imagePart = {
+    inlineData: {
+      mimeType: mimeType,
+      data: base64ImageData,
+    },
+  };
 
-export const analyzeImage = async (base64ImageData: string, mimeType: string): Promise<AnalysisReport> => {
-    const imagePart = {
-        inlineData: {
-            mimeType: mimeType, 
-            data: base64ImageData,
-        },
-    };
+  const textPart = {
+    text: getAnalysisPrompt(),
+  };
 
-    const textPart = {
-        text: getAnalysisPrompt(),
-    };
+  try {
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: { parts: [imagePart, textPart] },
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: analysisSchema,
+      },
+    });
 
-    try {
-        const response: GenerateContentResponse = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: { parts: [imagePart, textPart] },
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: analysisSchema,
-            }
-        });
+    const parsedJson = JSON.parse(response.text);
 
-        const parsedJson = JSON.parse(response.text);
-
-        if (parsedJson.error) {
-            throw new Error(parsedJson.error);
-        }
-
-        // Only return analysis report fields if error is not present
-        const { error, ...reportData } = parsedJson;
-        return reportData as AnalysisReport;
-
-    } catch (error) {
-        console.error("Gemini API call failed:", error);
-        throw new Error("未能从 AI 模型获取有效的分析。");
+    if (parsedJson.error) {
+      throw new Error(parsedJson.error);
     }
+
+    // Only return analysis report fields if error is not present
+    const { error, ...reportData } = parsedJson;
+    return reportData as AnalysisReport;
+  } catch (error) {
+    console.error('Gemini API call failed:', error);
+    throw new Error('未能从 AI 模型获取有效的分析。');
+  }
 };
 
 const startNewChat = (settings: SettingsData) => {
-    const { aiPersonality, aiStyle, aiResponseStyle, userProfile } = settings;
-    const { nickname, mbti, aestheticNeeds, beautyExpectations } = userProfile;
+  const { aiPersonality, aiStyle, aiResponseStyle, userProfile } = settings;
+  const { nickname, mbti, aestheticNeeds, beautyExpectations } = userProfile;
 
-    const systemInstruction = `你是一位AI助手。
+  const systemInstruction = `你是一位AI助手。
     你的MBTI性格是【${aiPersonality}】。请在回答中体现出这种性格的特点。
     你的沟通风格是【${aiStyle}】。
     你的回答详细程度被设定为【${aiResponseStyle}】。
@@ -157,56 +221,61 @@ const startNewChat = (settings: SettingsData) => {
     始终保持鼓励和积极的态度，并提醒用户就医疗问题咨询专业人士。
     所有回答都必须使用简体中文。`;
 
-    chat = ai.chats.create({
-        model: 'gemini-2.5-flash',
-        config: {
-            systemInstruction,
-        },
-    });
-    currentChatSettings = settings;
+  chat = ai.chats.create({
+    model: 'gemini-2.5-flash',
+    config: {
+      systemInstruction,
+    },
+  });
+  currentChatSettings = settings;
 };
 
 export const resetChat = () => {
-    chat = null;
-    currentChatSettings = null;
+  chat = null;
+  currentChatSettings = null;
 };
 
-export const sendMessageToChat = async (message: string, settings: SettingsData): Promise<string> => {
-    // If chat doesn't exist OR settings have changed, create a new chat
-    if (!chat || JSON.stringify(currentChatSettings) !== JSON.stringify(settings)) {
-        startNewChat(settings);
-    }
-    try {
-        const response: GenerateContentResponse = await chat!.sendMessage({ message });
-        return response.text;
-    } catch (error) {
-        console.error("Chat API call failed:", error);
-        throw new Error("未能从 AI 助手获取回应。");
-    }
+export const sendMessageToChat = async (
+  message: string,
+  settings: SettingsData
+): Promise<string> => {
+  // If chat doesn't exist OR settings have changed, create a new chat
+  if (!chat || JSON.stringify(currentChatSettings) !== JSON.stringify(settings)) {
+    startNewChat(settings);
+  }
+  try {
+    const response: GenerateContentResponse = await chat!.sendMessage({ message });
+    return response.text;
+  } catch (error) {
+    console.error('Chat API call failed:', error);
+    throw new Error('未能从 AI 助手获取回应。');
+  }
 };
 
 export const getExplanationForTerm = async (term: string): Promise<string> => {
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: `请用简体中文，为非专业人士简单解释一下在皮肤和面部美学背景下的术语：“${term}”。解释应包括它是什么，以及可能的常见原因。保持回答简洁，大约2-3句话。请强制使用简体中文。`,
-        });
-        return response.text;
-    } catch (error) {
-        console.error(`Failed to get explanation for ${term}:`, error);
-        throw new Error("无法获取该术语的解释。");
-    }
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `请用简体中文，为非专业人士简单解释一下在皮肤和面部美学背景下的术语：“${term}”。解释应包括它是什么，以及可能的常见原因。保持回答简洁，大约2-3句话。请强制使用简体中文。`,
+    });
+    return response.text;
+  } catch (error) {
+    console.error(`Failed to get explanation for ${term}:`, error);
+    throw new Error('无法获取该术语的解释。');
+  }
 };
 
 const suggestedQuestionsSchema = {
-    type: Type.ARRAY,
-    description: "A list of three suggested follow-up questions for the user.",
-    items: { type: Type.STRING }
+  type: Type.ARRAY,
+  description: 'A list of three suggested follow-up questions for the user.',
+  items: { type: Type.STRING },
 };
 
-export const generateSuggestedQuestions = async (conversationHistory: ChatMessage[]): Promise<string[]> => {
-    const historyText = conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n');
-    const prompt = `根据以下的对话历史，为用户生成3个相关的、可操作的追问问题。用户正在与一位AI健康与美容顾问交谈。
+export const generateSuggestedQuestions = async (
+  conversationHistory: ChatMessage[]
+): Promise<string[]> => {
+  const historyText = conversationHistory.map((m) => `${m.role}: ${m.content}`).join('\n');
+  const prompt = `根据以下的对话历史，为用户生成3个相关的、可操作的追问问题。用户正在与一位AI健康与美容顾问交谈。
     请确保问题是开放式的，能够引导更有深度的对话。
     你的回答必须是一个有效的JSON数组，只包含三个字符串。
     所有问题都必须是简体中文。
@@ -214,29 +283,29 @@ export const generateSuggestedQuestions = async (conversationHistory: ChatMessag
     对话历史:
     ${historyText}`;
 
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-             config: {
-                responseMimeType: "application/json",
-                responseSchema: suggestedQuestionsSchema,
-            }
-        });
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: suggestedQuestionsSchema,
+      },
+    });
 
-        const questions = JSON.parse(response.text);
+    const questions = JSON.parse(response.text);
 
-        if (Array.isArray(questions) && questions.length > 0 && questions.every(q => typeof q === 'string')) {
-            return questions;
-        }
-        throw new Error("AI返回的格式无效。");
-    } catch (error) {
-        console.error("Failed to generate suggested questions:", error);
-        // Fallback to generic questions
-        return [
-            "我的皮肤类型是什么？",
-            "我应该使用哪些护肤成分？",
-            "如何改善我的整体气色？"
-        ];
+    if (
+      Array.isArray(questions) &&
+      questions.length > 0 &&
+      questions.every((q) => typeof q === 'string')
+    ) {
+      return questions;
     }
+    throw new Error('AI返回的格式无效。');
+  } catch (error) {
+    console.error('Failed to generate suggested questions:', error);
+    // Fallback to generic questions
+    return ['我的皮肤类型是什么？', '我应该使用哪些护肤成分？', '如何改善我的整体气色？'];
+  }
 };

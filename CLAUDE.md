@@ -14,7 +14,9 @@ Dr-He AI Face Analysis (Aura AI) is a Chinese-language web application that uses
 | Framework | React | 19.1.1 |
 | Language | TypeScript | 5.8.2 |
 | Build Tool | Vite | 6.2.0 |
-| Styling | Tailwind CSS | 3.x (CDN) |
+| Styling | Tailwind CSS | 4.x (Build) |
+| Testing | Vitest + Playwright | Latest |
+| Code Quality | ESLint + Prettier | Latest |
 | AI Service | Google Gemini | 2.5 Flash |
 | Markdown | react-markdown + remark-gfm | 9.0.1 |
 | Export | html2canvas | 1.4.1 |
@@ -33,6 +35,18 @@ npm run build
 
 # Preview production build
 npm run preview
+
+# Code quality
+npm run lint          # Run ESLint
+npm run lint:fix      # Fix ESLint issues
+npm run format        # Format with Prettier
+
+# Testing
+npm run test          # Run unit tests (watch mode)
+npm run test:run      # Run unit tests once
+npm run test:coverage # Run tests with coverage
+npm run test:e2e      # Run E2E tests with Playwright
+npm run test:e2e:ui   # Run E2E tests with UI
 ```
 
 ## Environment Setup
@@ -48,31 +62,38 @@ The API key is injected at build time via `vite.config.ts` and accessed as `proc
 
 ```
 /home/user/doctor-he/
-├── components/              # React UI components (16 files)
-│   ├── AIChat.tsx          # AI conversation interface with message history
-│   ├── AnalysisResult.tsx  # Displays analysis with keyword highlighting
-│   ├── AnnotatedImage.tsx  # Visual annotations on face images
-│   ├── ContactSection.tsx  # Contact information display
-│   ├── Disclaimer.tsx      # Legal disclaimer component
-│   ├── Footer.tsx          # Footer with company branding
-│   ├── Header.tsx          # Top navigation with settings access
-│   ├── HeroImage.tsx       # Hero/banner images
+├── components/              # React UI components
+│   ├── AIChat.tsx          # AI conversation interface
+│   ├── AnalysisResult.tsx  # Analysis results display
+│   ├── ErrorBoundary.tsx   # Error handling wrapper
 │   ├── ImageUploader.tsx   # Image upload and camera capture
 │   ├── Modal.tsx           # Reusable modal dialog
-│   ├── Settings.tsx        # User preferences (theme, MBTI, font size)
-│   ├── SplashScreen.tsx    # Initial loading screen
-│   ├── TabBar.tsx          # Bottom navigation tabs
-│   ├── UsageGuide.tsx      # User onboarding tutorial
-│   ├── WelcomeModal.tsx    # First-time visitor welcome
-│   └── icons.tsx           # SVG icon library
+│   ├── Settings.tsx        # User preferences
+│   ├── Skeleton.tsx        # Loading skeleton components
+│   └── ...                 # Other UI components
 ├── services/
-│   └── geminiService.ts    # All Gemini API integrations
+│   └── geminiService.ts    # Gemini API integrations
+├── utils/
+│   ├── imageCompression.ts # Image compression utilities
+│   ├── rateLimiter.ts      # API rate limiting
+│   └── lazyImport.tsx      # Lazy loading utilities
+├── tests/                   # Unit tests
+│   ├── setup.ts            # Test setup
+│   └── components/         # Component tests
+├── e2e/                     # E2E tests (Playwright)
+│   └── app.spec.ts         # App E2E tests
+├── src/
+│   └── index.css           # Tailwind CSS entry point
+├── public/
+│   └── manifest.json       # PWA manifest
 ├── App.tsx                 # Main application component
 ├── index.tsx               # React DOM entry point
-├── index.html              # HTML template with Tailwind config
-├── types.ts                # All TypeScript type definitions
-├── vite.config.ts          # Vite configuration
-├── tsconfig.json           # TypeScript configuration
+├── types.ts                # TypeScript type definitions
+├── vite.config.ts          # Vite + PWA configuration
+├── vitest.config.ts        # Vitest configuration
+├── playwright.config.ts    # Playwright configuration
+├── tailwind.config.js      # Tailwind configuration
+├── eslint.config.js        # ESLint configuration
 └── package.json            # Dependencies and scripts
 ```
 

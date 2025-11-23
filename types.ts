@@ -1,4 +1,3 @@
-
 export interface AnnotatedFinding {
   description: string;
   coordinates?: { x: number; y: number };
@@ -47,10 +46,22 @@ export type MainTab = 'home' | '肤色' | '气色' | '形色';
 
 // Settings Types
 export const mbtiTypes = [
-  'ISFJ', 'ISTJ', 'INFJ', 'INTJ', 
-  'ISFP', 'ISTP', 'INFP', 'INTP', 
-  'ESFP', 'ESTP', 'ENFP', 'ENTP', 
-  'ESFJ', 'ESTJ', 'ENFJ', 'ENTJ'
+  'ISFJ',
+  'ISTJ',
+  'INFJ',
+  'INTJ',
+  'ISFP',
+  'ISTP',
+  'INFP',
+  'INTP',
+  'ESFP',
+  'ESTP',
+  'ENFP',
+  'ENTP',
+  'ESFJ',
+  'ESTJ',
+  'ENFJ',
+  'ENTJ',
 ] as const;
 
 export const bloodTypes = ['A', 'B', 'AB', 'O', 'Unknown'] as const;
@@ -58,9 +69,9 @@ export const bloodTypes = ['A', 'B', 'AB', 'O', 'Unknown'] as const;
 export type Theme = 'light' | 'dark' | 'roseGold' | 'lilac' | 'mint';
 export type FontSize = 'small' | 'medium' | 'large';
 export type AIResponseStyle = '精炼' | '标准' | '话痨';
-export type AIPersonality = typeof mbtiTypes[number];
+export type AIPersonality = (typeof mbtiTypes)[number];
 export type AIStyle = '日常幽默' | '专业严谨' | '新脱口秀';
-export type BloodType = typeof bloodTypes[number];
+export type BloodType = (typeof bloodTypes)[number];
 
 export interface UserProfile {
   nickname: string;

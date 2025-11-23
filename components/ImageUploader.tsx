@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { CameraIcon, UploadIcon } from './icons';
 
@@ -9,94 +8,109 @@ interface ImageUploaderProps {
 }
 
 interface CameraViewProps {
-    onCapture: (blob: Blob) => void;
-    onClose: () => void;
+  onCapture: (blob: Blob) => void;
+  onClose: () => void;
 }
 
 const CameraView: React.FC<CameraViewProps> = ({ onCapture, onClose }) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const [stream, setStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
-    const stopCamera = useCallback(() => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            setStream(null);
-        }
-    }, [stream]);
+  const stopCamera = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+    }
+  }, [stream]);
 
-    const startCamera = useCallback(async () => {
-        try {
-            const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" },
-                audio: false 
-            });
-            setStream(mediaStream);
-            if (videoRef.current) {
-                videoRef.current.srcObject = mediaStream;
-            }
-        } catch (err) {
-            console.error("Camera access denied:", err);
-            onClose();
-        }
-    }, [onClose]);
+  const startCamera = useCallback(async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' },
+        audio: false,
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (err) {
+      console.error('Camera access denied:', err);
+      onClose();
+    }
+  }, [onClose]);
 
-    const handleCapture = () => {
-        if (videoRef.current) {
-            const canvas = document.createElement('canvas');
-            canvas.width = videoRef.current.videoWidth;
-            canvas.height = videoRef.current.videoHeight;
-            const context = canvas.getContext('2d');
-            if(context) {
-                context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-                canvas.toBlob(blob => {
-                    if (blob) {
-                        onCapture(blob);
-                    }
-                    stopCamera();
-                    onClose();
-                }, 'image/jpeg');
-            }
-        }
+  const handleCapture = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            onCapture(blob);
+          }
+          stopCamera();
+          onClose();
+        }, 'image/jpeg');
+      }
+    }
+  };
+
+  useEffect(() => {
+    startCamera();
+    return () => {
+      stopCamera();
     };
-    
-    useEffect(() => {
-        startCamera();
-        return () => {
-            stopCamera();
-        };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  }, []);
 
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex flex-col items-center justify-center z-50">
-            <div className="relative bg-surface p-4 rounded-lg shadow-xl">
-                <video ref={videoRef} autoPlay playsInline className="w-full max-w-lg rounded-md"></video>
-                <div className="mt-4 flex justify-center space-x-4">
-                    <button onClick={handleCapture} className="px-6 py-3 bg-accent text-white rounded-full font-bold hover:opacity-90 transition-colors">拍摄</button>
-                    <button onClick={() => { stopCamera(); onClose(); }} className="px-6 py-3 bg-gray-600 text-white rounded-full hover:bg-gray-500 transition-colors">取消</button>
-                </div>
-            </div>
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex flex-col items-center justify-center z-50">
+      <div className="relative bg-surface p-4 rounded-lg shadow-xl">
+        <video ref={videoRef} autoPlay playsInline className="w-full max-w-lg rounded-md"></video>
+        <div className="mt-4 flex justify-center space-x-4">
+          <button
+            onClick={handleCapture}
+            className="px-6 py-3 bg-accent text-white rounded-full font-bold hover:opacity-90 transition-colors"
+          >
+            拍摄
+          </button>
+          <button
+            onClick={() => {
+              stopCamera();
+              onClose();
+            }}
+            className="px-6 py-3 bg-gray-600 text-white rounded-full hover:bg-gray-500 transition-colors"
+          >
+            取消
+          </button>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
-
-export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageReady, onError, ...props }) => {
+export const ImageUploader: React.FC<ImageUploaderProps> = ({
+  onImageReady,
+  onError,
+  ...props
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showCamera, setShowCamera] = useState(false);
 
   const processFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
-        onError("文件类型无效。请上传图片。");
-        return;
+      onError('文件类型无效。请上传图片。');
+      return;
     }
     const reader = new FileReader();
     reader.onload = () => {
-        onImageReady(reader.result as string, file.type);
+      onImageReady(reader.result as string, file.type);
     };
     reader.onerror = () => {
-        onError("读取文件失败。");
+      onError('读取文件失败。');
     };
     reader.readAsDataURL(file);
   };
@@ -111,15 +125,18 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageReady, onEr
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
-  
+
   const handleCameraCapture = (blob: Blob) => {
-    const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+    const file = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
     processFile(file);
   };
 
   return (
     <>
-      <div className="max-w-2xl mx-auto bg-surface p-6 md:p-8 rounded-2xl shadow-soft" data-tour-id={props['data-tour-id']}>
+      <div
+        className="max-w-2xl mx-auto bg-surface p-6 md:p-8 rounded-2xl shadow-soft"
+        data-tour-id={props['data-tour-id']}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             onClick={() => setShowCamera(true)}
@@ -146,7 +163,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageReady, onEr
           className="hidden"
         />
       </div>
-      {showCamera && <CameraView onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />}
+      {showCamera && (
+        <CameraView onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />
+      )}
     </>
   );
 };
